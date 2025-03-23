@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bodycare Routine Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(to right, #ff9a9e, #fad0c4);
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            color: #ff5e62;
+        }
+        input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ff7eb3;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            background: #ff5e62;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #ff3b4f;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        }
+        .done {
+            text-decoration: line-through;
+            color: gray;
+            background: #fddde4;
+        }
+        .delete-btn {
+            background: #ff3b4f;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bodycare Routine Tracker</h1>
+        <input type="text" id="taskInput" placeholder="Tambahkan perawatan baru">
+        <button onclick="addTask()">Tambah</button>
+        <ul id="taskList"></ul>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", loadTasks);
+        
+        function addTask() {
+            let taskInput = document.getElementById("taskInput");
+            let taskText = taskInput.value.trim();
+            if (taskText === "") return;
+            
+            let task = { text: taskText, completed: false };
+            let tasks = JSON.parse(localStorage.getItem("bodycareTasks")) || [];
+            tasks.push(task);
+            localStorage.setItem("bodycareTasks", JSON.stringify(tasks));
+            
+            taskInput.value = "";
+            renderTasks();
+        }
+
+        function toggleTask(index) {
+            let tasks = JSON.parse(localStorage.getItem("bodycareTasks"));
+            tasks[index].completed = !tasks[index].completed;
+            localStorage.setItem("bodycareTasks", JSON.stringify(tasks));
+            renderTasks();
+        }
+
+        function deleteTask(index) {
+            let tasks = JSON.parse(localStorage.getItem("bodycareTasks"));
+            tasks.splice(index, 1);
+            localStorage.setItem("bodycareTasks", JSON.stringify(tasks));
+            renderTasks();
+        }
+
+        function renderTasks() {
+            let taskList = document.getElementById("taskList");
+            taskList.innerHTML = "";
+            let tasks = JSON.parse(localStorage.getItem("bodycareTasks")) || [];
+            
+            tasks.forEach((task, index) => {
+                let li = document.createElement("li");
+                li.className = task.completed ? "done" : "";
+                li.innerHTML = `
+                    <span onclick="toggleTask(${index})">${task.text}</span>
+                    <button class="delete-btn" onclick="deleteTask(${index})">Hapus</button>
+                `;
+                taskList.appendChild(li);
+            });
+        }
+
+        function loadTasks() {
+            renderTasks();
+        }
+    </script>
+</body>
+</html>
