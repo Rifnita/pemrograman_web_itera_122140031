@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reminders Notes Daily</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      transition: all 0.3s ease;
+    }
+    :root {
+      --bg: #b3c3f8;
+      --text: #000000;
+      --card: #f0f0f0;
+    }
+    .dark-mode {
+      --bg: #322e2e;
+      --text: #ffffff;
+      --card: #6b6b6b;
+    }
+    header {
+      background-color: #4760b8;
+      color: rgb(168, 192, 230);
+      padding: 1rem;
+      text-align: center;
+    }
+    .container {
+      padding: 1rem;
+      max-width: 800px;
+      margin: auto;
+    }
+    .card {
+      background: var(--card);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 10px;
+    }
+    input, textarea, button, select {
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .task-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .task-item span {
+      display: block;
+    }
+    .task-controls {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .deadline {
+      font-size: 0.8rem;
+      color: rgb(233, 15, 15);
+    }
+    .checked {
+      text-decoration: line-through;
+      color: rgb(5, 216, 76);
+    }
+    #timerDisplay {
+      font-size: 2rem;
+      text-align: center;
+      margin: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Reminders Notes Daily</h1>
+    <button onclick="toggleDarkMode()">🌙 Toggle Dark Mode</button>
+  </header>
+  <div class="container">
+    <div class="card">
+      <h2>Tambah Tugas</h2>
+      <input type="text" id="taskInput" placeholder="Tugas baru..." />
+      <input type="date" id="deadlineInput" />
+      <button onclick="addTask()">Tambah</button>
+
+      <h3>Filter dan Urutkan</h3>
+      <input type="date" id="filterDate" onchange="renderTasks()" />
+      <button onclick="sortTasksByDeadline()">Urutkan Berdasarkan Deadline</button>
+
+      <ul id="taskList"></ul>
+    </div>
+
+    <div class="card">
+      <h2>Catatan</h2>
+      <textarea id="noteInput" rows="3" placeholder="Tulis catatanmu di sini..."></textarea>
+      <button onclick="saveNote()">Simpan Catatan</button>
+      <ul id="noteList"></ul>
+    </div>
+
+    <div class="card">
+      <h2>Timer Fokus (Pomodoro) ⏱️</h2>
+      <div id="timerDisplay">25:00</div>
+      <button onclick="startPomodoro()">Mulai</button>
+      <button onclick="resetPomodoro()">Reset</button>
+    </div>
+  </div>
+
+  <script>
+    class Task {
+      constructor(text, deadline, done = false) {
+        this.text = text;
+        this.deadline = deadline;
+        this.done = done;
+      }
+    }
+
+    let taskList = JSON.parse(localStorage.getItem("tasks")) || [];
+    const notes = JSON.parse(localStorage.getItem("notes")) || [];
+
+    function renderTasks() {
+      const filterDate = document.getElementById("filterDate").value;
+      const list = document.getElementById("taskList");
+      list.innerHTML = "";
+      taskList.forEach((task, index) => {
+        if (filterDate && task.deadline !== filterDate) return;
+
+        const li = document.createElement("li");
+        li.className = "task-item";
+
+        const text = document.createElement("span");
+        text.textContent = `${task.text} `;
+        if (task.done) text.classList.add("checked");
+
+        const deadline = document.createElement("span");
+        deadline.className = "deadline";
+        deadline.textContent = `(Deadline: ${task.deadline})`;
+
+        const controls = document.createElement("div");
+        controls.className = "task-controls";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = task.done;
+        checkbox.onchange = () => toggleTask(index);
+
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "Hapus";
+        removeBtn.onclick = () => removeTask(index);
+
+        controls.append(checkbox, removeBtn);
+        li.append(checkbox, text, deadline, removeBtn);
+        list.appendChild(li);
+      });
+    }
+
+    function addTask() {
+      const input = document.getElementById("taskInput");
+      const deadline = document.getElementById("deadlineInput").value;
+      if (input.value.trim() === "") return;
+      taskList.push(new Task(input.value, deadline));
+      input.value = "";
+      localStorage.setItem("tasks", JSON.stringify(taskList));
+      renderTasks();
+    }
+
+    function toggleTask(index) {
+      taskList[index].done = !taskList[index].done;
+      localStorage.setItem("tasks", JSON.stringify(taskList));
+      renderTasks();
+    }
+
+    function removeTask(index) {
+      taskList.splice(index, 1);
+      localStorage.setItem("tasks", JSON.stringify(taskList));
+      renderTasks();
+    }
+
+    function sortTasksByDeadline() {
+      taskList.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+      localStorage.setItem("tasks", JSON.stringify(taskList));
+      renderTasks();
+    }
+
+    function saveNote() {
+      const input = document.getElementById("noteInput");
+      if (input.value.trim() === "") return;
+      notes.push(input.value);
+      localStorage.setItem("notes", JSON.stringify(notes));
+      input.value = "";
+      renderNotes();
+    }
+
+    function renderNotes() {
+      const list = document.getElementById("noteList");
+      list.innerHTML = "";
+      notes.forEach((note, index) => {
+        const li = document.createElement("li");
+        li.textContent = note;
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "Hapus";
+        removeBtn.onclick = () => {
+          notes.splice(index, 1);
+          localStorage.setItem("notes", JSON.stringify(notes));
+          renderNotes();
+        };
+        li.appendChild(removeBtn);
+        list.appendChild(li);
+      });
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
+    }
+
+    let timer;
+    let timeLeft = 1500;
+
+    function startPomodoro() {
+      clearInterval(timer);
+      timer = setInterval(() => {
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          alert("Waktu selesai! Saatnya istirahat.");
+          return;
+        }
+        timeLeft--;
+        updateTimerDisplay();
+      }, 1000);
+    }
+
+    function resetPomodoro() {
+      clearInterval(timer);
+      timeLeft = 1500;
+      updateTimerDisplay();
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+      const seconds = (timeLeft % 60).toString().padStart(2, '0');
+      document.getElementById("timerDisplay").textContent = `${minutes}:${seconds}`;
+    }
+
+    function checkDeadlineNotifications() {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(now.getDate() + 1);
+
+      taskList.forEach(task => {
+        const deadline = new Date(task.deadline);
+        if (!task.done && deadline.toDateString() === tomorrow.toDateString()) {
+          alert(`Tugas "${task.text}" akan dikumpul besok (${task.deadline})!`);
+        }
+      });
+    }
+
+    renderTasks();
+    renderNotes();
+    updateTimerDisplay();
+  </script>
+</body>
+</html>
