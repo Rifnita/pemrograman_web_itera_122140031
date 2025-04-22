@@ -145,3 +145,6 @@ useLocalStorage: Abstraksi untuk penyimpanan dan pengambilan data dari localStor
 Proyek ini dibuat untuk keperluan pembelajaran dan bebas digunakan untuk pengembangan lebih lanjut.
 
 - Selamat mengelola koleksi bukumu! -
+
+Screenshoot Antarmuka aplikasi BookApp
+![Screenshoot Antarmuka](https://github.com/user-attachments/assets/9ec21543-fc02-470d-a93c-672068bf0640)
