@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: matakuliah_api
+Version: 0.1
+Requires-Dist: pyramid
+Requires-Dist: SQLAlchemy
+Requires-Dist: waitress
+Dynamic: requires-dist
